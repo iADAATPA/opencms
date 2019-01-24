@@ -1,10 +1,20 @@
 <template> 
   <div style="width:500px" id="main">
     <!-- Header -->
-    <el-container id="header">
-      <div id="logo-container"><div id="logo"><img src="./assets/imgs/logo-mt-hub-small.png"></div></div>
-      <div id="header-info"><h1>OpenCms translator</h1><p>by mt-hub</p></div>
-    </el-container>  
+      <el-row id="header">
+            <el-col :span="12">
+              <div id="logo-container"><div id="logo"><img src="./assets/imgs/logo-mt-hub-small.png"></div></div>
+              <div id="header-info"><h1>OpenCms translator</h1><p>by <a href="http://pangeamt.com" target="_blank">pangeamt</a> for <a href="https://mt-hub.eu/" target="_blank">mt-hub</a></p></div>
+            </el-col>
+          <el-col :span="12">
+            <div id="header-right">
+              <el-button-group>
+                <el-button  size="mini" @click="logout">log out</el-button>
+                <el-button icon="el-icon-close"  size="mini" @click="closeWindow"></el-button>
+              </el-button-group>                   
+            </div>
+          </el-col>
+      </el-row>  
     
     <!-- Tabs -->
     <div id="tabs">    
@@ -27,27 +37,19 @@
           </el-form>
         </el-tab-pane>
 
-        <!-- Logged in -->
+        <!-- Translate -->
         <el-tab-pane label="Translate" name="translate" >
           <el-form>  
-            <el-form-item label="This plugin works in these URLs:" >
+            <el-form-item label="List of allowed URLs. One per line" >
               <el-input type="textarea" :rows="5" placeholder="One url per line" v-model="data.urls">
               </el-input>      
             </el-form-item>            
             <el-button type="primary" @click="saveUrl">Save</el-button>
           </el-form>
-        </el-tab-pane>
-
-        <!-- Options -->
-        <el-tab-pane label="Options" name="options">
-          <el-form ref="optionForm">  
-            <p id="options-info">For a better user experience, this plug-in store your api key and the acccess point you used. 
-              You can delete these data clicking the "delete button" above.</p>      
-            <el-button type="primary" @click="restore" size="small">Delete</el-button>
-          </el-form>
-        </el-tab-pane>          
+        </el-tab-pane>           
       </el-tabs>    
     </div>
+    <!-- Footer-->
     <el-row>
       <el-col :span="24">
         <el-card id="credits-card" :body-style="{ padding: '15px' }">
@@ -59,8 +61,7 @@
           </el-container> 
         </el-card>
       </el-col>
-    </el-row>
-       
+    </el-row>       
   </div>  
 </template>
 <script>
@@ -73,18 +74,15 @@
     let data = {
       // Tabs
       activeTab: 'login',
-  
+      // Login in
       accessPoint: 'https://mt-hub.eu/api',
       apiKey: 'PvWK3Im7srIYaudGh',
-
       // Auth loading
       authenticateLoading: false,
-
       lastLogin: null,
-      loginExpire: 15 * 60 * 1000,
-
-      urls: ''
-
+      loginExpire: 60 * 60 * 1000, // One hour
+      // Urls
+      urls: 'https://www.mediapart.fr/\nhttps://www.le.ac.uk'
     }
     return data
   }
@@ -139,40 +137,41 @@
       },
 
       init () {
-        const that = this
-        storage.get(storage.DATA_KEY).then(function (value) {
+        storage.get(storage.DATA_KEY).then(value => {
           if (value) {
             const data = JSON.parse(value)
             const date = parseInt(data.lastLogin)
             const now = Date.now()
             if (now - date < data.loginExpire) {
-              // Login is ok we save the date
-              data.lastLogin = now
-              const dataJson = JSON.stringify(data)
-              storage.set(storage.DATA_KEY, dataJson).then(function () {
-                that.data = data
-              })
+              this.data = data
             } else {
-              that.data = getDefault()
-              that.data.accessPoint = data.accessPoint
-              that.data.apiKey = data.apiKey
+              this.data = getDefault()
+              this.data.accessPoint = data.accessPoint
+              this.data.apiKey = data.apiKey
+              this.data.urs = data.urls
             }
           } else {
-            that.data = getDefault()
+            this.data = getDefault()
           }
         }).catch(function (err) {
           console.log(err)
-          that.data = getDefault()
+          this.data = getDefault()
         })
       },
       saveUrl () {
-        const that = this
         const dataJson = JSON.stringify(this.data)
-        storage.set(storage.DATA_KEY, dataJson).then(function () {
-          that.$message.success('Urls saved')
+        storage.set(storage.DATA_KEY, dataJson).then(() => {
+          this.$message.success('Urls saved successfully')
         })
       },
-      restore () {},
+      logout () {
+        storage.remove(storage.DATA_KEY).then(() => {
+          const data = getDefault()
+          this.data = data
+        }).catch(function (err) {
+          console.log(err)
+        })
+      },
 
       // Clear a storage key
       clearStorage (key) {
@@ -180,12 +179,15 @@
         // if (localStorage.hasOwnProperty(key)) {
         //   localStorage.removeItem(key)
         // }
+      },
+
+      closeWindow () {
+        window.close()
       }
     }
   }
 </script>
 <style lang="css">
-
   #header {
     margin-bottom:8px;
   }
@@ -195,27 +197,25 @@
     padding-left:2px
   }
   #header-info {
-
     float:left;
-    padding-left: 5px;
-    padding-top:3px
+    padding-left: 8px;
+    padding-top:5px
   }
 
   #header-info p {
-    margin: 3px 0 0 0
+    line-height:16px;
+    margin:0
   }
 
-  h1 {
-    font-size:16px;    
+  h1 {   
+    font-size:18px;    
     color:#3B3B3B;
     font-weight:bold;
     margin:0;
-    line-height: 16px;
-    text-transform: uppercase;
-
-   
-  }
-  
+     margin-top:2px;
+    line-height: 18px;
+    text-transform: capitalize;  
+  }  
 
   #logo {
     -webkit-border-radius: 3px;
@@ -234,8 +234,8 @@
     height: auto;
   }
 
-  #options-info {
-    margin-top:0
+  #header-right {
+      float:right
   }
   
   /* Cascader */
@@ -263,9 +263,18 @@
 
   #credits {
     float:left;
-    width: 200px;
-    padding-top:19px;
-    padding-left:15px;
+    margin-left:15px;
+    border-bottom-left-radius: 4px;
+    background-color: #ecf8ff;
+    border-bottom-right-radius:4px;
+    border-left-color: rgb(80, 191, 255);
+    border-left-style:solid;
+    border-left-width:5px;
+    border-top-left-radius:4px;
+    border-top-right-radius:4px;
+    display:block;
+    font-family:"Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimSun, sans-serif;
+    padding: 16px 16px;
   }
 
   #logo-ce {

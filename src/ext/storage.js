@@ -26,5 +26,16 @@ export default {
         resolve(true)
       })
     })
+  },
+
+  remove (key) {
+    return new Promise(function (resolve, reject) {
+      chrome.storage.local.remove(key, function () {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError)
+        }
+        resolve(true)
+      })
+    })
   }
 }
