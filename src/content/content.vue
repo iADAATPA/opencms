@@ -4,27 +4,20 @@
       <el-button type="primary" @click="showMenu" id="ia-show-menu" icon="el-icon-view" size="mini" circle></el-button>
     </div>  
     <div id="ia-content" v-show="data.menuVisible">
-      <el-row >
-        <el-col :span="24">
-          <el-form>
-            <el-row>
-              <el-col :span="24">
-                <!-- Engine Selector -->
-                <el-form-item label="Please, choose a translation engine" >
-                  <el-cascader
-                      expand-trigger="hover"
-                      @change="engineSelected"
-                      :options="data.engines"
-                      v-model="data.engine"
-                      style="width:100%"
-                      placeholder="Domain / Source language / Target langugae">
-                  </el-cascader>
-                </el-form-item> 
-              </el-col>
-            </el-row>   
+          <el-form style="padding:5px 20px">
+              <!-- Engine Selector -->
+              <el-form-item label="Translation engine" >
+                <el-cascader
+                    expand-trigger="hover"
+                    @change="engineSelected"
+                    :options="data.engines"
+                    v-model="data.engine"         
+                    placeholder="Translation engine">
+                </el-cascader>
+              </el-form-item>
+              <el-checkbox v-model="postEdition">Post edición</el-checkbox>  
           </el-form> 
-        </el-col>
-      </el-row> 
+
     </div>
   </div>
 </template>
@@ -39,7 +32,8 @@
           accessPoint: '',
           engines: [],
           engine: [],
-          menuVisible: false
+          menuVisible: false,
+          postEdition: false
         }
       }
     },
