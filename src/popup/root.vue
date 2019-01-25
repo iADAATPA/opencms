@@ -82,7 +82,7 @@
       lastLogin: null,
       loginExpire: 60 * 60 * 1000, // One hour
       // Urls
-      urls: 'https://www.mediapart.fr/\nhttps://www.le.ac.uk'
+      urls: 'https://www.mediapart.fr/\nhttps://www.le.ac.uk\nhttp://212.4.98.129:23456/opencms/'
     }
     return data
   }

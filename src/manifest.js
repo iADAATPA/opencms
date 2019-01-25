@@ -38,7 +38,7 @@ module.exports = {
     ],
     run_at: 'document_end',
     matches: ['<all_urls>'],
-    all_frames: false
+    all_frames: true
   }],
   manifest_version: 2,
   content_security_policy: "script-src 'self'; object-src 'self'",
