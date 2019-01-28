@@ -9,7 +9,7 @@
           <el-col :span="12">
             <div id="header-right">
               <el-button-group>
-                <el-button  size="mini" @click="logout">log out</el-button>
+                <el-button  size="mini" @click="logout" v-show="this.data.loggedIn">log out</el-button>
                 <el-button icon="el-icon-close"  size="mini" @click="closeWindow"></el-button>
               </el-button-group>                   
             </div>
@@ -31,6 +31,9 @@
               <!--  Api key  -->
               <el-form-item label="API key" >
                 <el-input v-model="data.apiKey" placeholder="Enter your API key" type="password"></el-input>
+              </el-form-item>
+              <el-form-item>
+                <el-checkbox v-model="rememberme">Remember me</el-checkbox>
               </el-form-item>
               <!--  Sign in -->
               <el-button ref="authenticateButton" type="primary" @click="authenticate" :loading="data.authenticateLoading">Log in</el-button>
@@ -77,10 +80,12 @@
       // Login in
       accessPoint: 'https://mt-hub.eu/api',
       apiKey: 'PvWK3Im7srIYaudGh',
-      // Auth loading
+      // Auth
       authenticateLoading: false,
+      loggedIn: false,
       lastLogin: null,
       loginExpire: 60 * 60 * 1000, // One hour
+      rememberme: false,
       // Urls
       urls: 'https://www.mediapart.fr/\nhttps://www.le.ac.uk\nhttp://212.4.98.129:23456/opencms/'
     }
@@ -120,8 +125,8 @@
             that.data.engines = user.getEngineCascader()
             that.data.lastLogin = Date.now()
             this.data.activeTab = 'translate'
+  
             const dataJson = JSON.stringify(this.data)
-
             storage.set(storage.DATA_KEY, dataJson).then(function () {
               // Tab
               that.$message.success('You have successfully logged in')
@@ -139,16 +144,19 @@
       init () {
         storage.get(storage.DATA_KEY).then(value => {
           if (value) {
-            const data = JSON.parse(value)
-            const date = parseInt(data.lastLogin)
+            const storedData = JSON.parse(value)
+            const date = parseInt(storedData.lastLogin)
             const now = Date.now()
-            if (now - date < data.loginExpire) {
-              this.data = data
+            if (now - date < storedData.loginExpire) {
+              this.data = storedData
             } else {
               this.data = getDefault()
-              this.data.accessPoint = data.accessPoint
-              this.data.apiKey = data.apiKey
-              this.data.urs = data.urls
+              if (this.rememberme) {
+                this.data.accessPoint = storedData.accessPoint
+                this.data.apiKey = storedData.apiKey
+                this.data.urls = storedData.urls
+              }
+              this.rememberme = storedData.rememberme
             }
           } else {
             this.data = getDefault()
@@ -157,13 +165,30 @@
           console.log(err)
           this.data = getDefault()
         })
+
+        // loagged in
+        this.checkLoggedIn()
+        setInterval(() => {
+          this.checkLoggedIn()
+        }, 1000)
       },
+
+      checkLoggedIn () {
+        const loggedIn = (Date.now() - this.data.lastLogin < this.data.loginExpire)
+        this.data.loggedIn = loggedIn
+        console.log(loggedIn)
+        if (!loggedIn) {
+          this.data.activeTab = 'login'
+        }
+      },
+  
       saveUrl () {
         const dataJson = JSON.stringify(this.data)
         storage.set(storage.DATA_KEY, dataJson).then(() => {
           this.$message.success('Urls saved successfully')
         })
       },
+  
       logout () {
         storage.remove(storage.DATA_KEY).then(() => {
           const data = getDefault()
@@ -171,14 +196,6 @@
         }).catch(function (err) {
           console.log(err)
         })
-      },
-
-      // Clear a storage key
-      clearStorage (key) {
-        // console.log('Delete storage', key)
-        // if (localStorage.hasOwnProperty(key)) {
-        //   localStorage.removeItem(key)
-        // }
       },
 
       closeWindow () {

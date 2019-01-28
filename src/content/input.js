@@ -1,9 +1,11 @@
 import $ from 'jquery'
+import TranslateButton from './input-translate-button'
 
 export default class Input {
-  constructor (el, index) {
+  constructor (el, index, vue) {
     this._el = el
     this._index = index
+    this._vue = vue
 
     // Create wrapper
     this._el.wrap('<font class="text-input-wrapper" id="text-input-wrapper-' + this._index + '"></font>')
@@ -16,14 +18,19 @@ export default class Input {
     this._el.on('focus', this.createTranslateButton.bind(this))
     $(document).on('focusInput', this.onFocusInput.bind(this))
   }
+
   createTranslateButton () {
     // Create only one
     if (this._translateButton !== null) {
       return
     }
 
+    if (this._vue.data.engine.length !== 3) {
+      return
+    }
+
     // Create a translate button
-    this._translateButton = $('<button class="el-button el-button--primary el-button--mini translate-button">T</button>').insertAfter(this._el)
+    this._translateButton = TranslateButton.create().insertAfter(this._el)
 
     // Adjust the position of the button
     this.adjustButtonPosition()
@@ -49,11 +56,25 @@ export default class Input {
   }
 
   onClickTranslateButton () {
-    this._translateButton.prepend('<i class="el-icon-loading el-icon-loading-pad"></i>')
-    this._translateButton.prop('disabled', true)
+    TranslateButton.addLoading(this._translateButton)
+    this._vue.translate(this)
+  }
+
+  getToTranslate () {
+    return this._el.val()
+  }
+
+  setValue (value) {
+    this._el.val(value)
+  }
+
+  removeLoading () {
+    if (this._translateButton !== null) {
+      TranslateButton.removeLoading(this._translateButton)
+    }
   }
 
   adjustButtonPosition () {
-    console.log('adjust')
+    // Not implemented
   }
 }

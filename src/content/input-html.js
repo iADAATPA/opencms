@@ -1,10 +1,11 @@
 import $ from 'jquery'
+import TranslateButton from './input-translate-button'
 
 export default class HTMLInput {
-  constructor (mceTd, index) { // jquery
-    console.log('mceTd', mceTd)
+  constructor (mceTd, index, vue) { // jquery
     this._mceTd = mceTd
     this._index = index
+    this._vue = vue
     this._translateButton = null
 
     this._mceId = 'mce-' + index
@@ -33,9 +34,7 @@ export default class HTMLInput {
     }, 200)
   }
   createTranslateButton () {
-    console.log('xxxxxxx')
     // First we trigger an event to remove other translate button
-
     $(document).trigger('focusInput', this._mceId)
 
     // skip if translate button exists
@@ -44,29 +43,21 @@ export default class HTMLInput {
     }
 
     // Create translate button
-    this._countWords.css('padding-right', '25px')
-    this._translateButton = $('<button class="translate-button HTMLInput" style="float:right">T</button>').insertAfter(this._countWords)
-
-    // // Adjust the button size
-    // this._translateButton.css('height', this._status_bar.outerHeight() + 'px')
-    // this._translateButton.css('width', this._status_bar.outerHeight() + 'px')
+    this._translateButton = TranslateButton.create()
+    this._mceTd.append(this._translateButton)
+    this._countWords.css('padding-right', '47px')
+    this._mceTd.css('position', 'relative')
+    this._translateButton.css('bottom', '6px')
+    this._translateButton.css('right', '6px')
+    this._translateButton.css('top', 'auto')
 
     // Create click handler for the translate button
-    // this._translateButton.click(this.onClickTranslateButton.bind(this))
+    this._translateButton.click(this.onClickTranslateButton.bind(this))
   }
 
   onClickTranslateButton () {
-    // var to_translate = this._input.html()
-    // this.anim_start()
-    // var src_lang = ButtonBar.getSrcLang()
-    // var tgt_lang = ButtonBar.getTgtLang()
-    // this._translator.translate([to_translate], src_lang, tgt_lang).then(
-    //   function (result) {
-    //     this.anim_end()
-    //     this._input.html(result[0][0]['tgt'])
-    //   }.bind(this), function (err) {
-    //     this.anim_end()
-    //   }.bind(this))
+    TranslateButton.addLoading(this._translateButton)
+    this._vue.translate(this)
   }
 
   onFocusInput (event, objectId) {
@@ -79,6 +70,21 @@ export default class HTMLInput {
     if (this._translateButton != null) {
       this._translateButton.remove()
       this._translateButton = null
+    }
+    this._countWords.css('padding-right', '0')
+  }
+
+  getToTranslate () {
+    return this._input.html()
+  }
+
+  setValue (value) {
+    this._input.html(value)
+  }
+
+  removeLoading () {
+    if (this._translateButton !== null) {
+      TranslateButton.removeLoading(this._translateButton)
     }
   }
 }

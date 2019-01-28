@@ -31,7 +31,6 @@ storage.get(storage.DATA_KEY).then(value => {
       if (allowedFrame) {
         const el = document.createElement('div')
         document.body.prepend(el)
-
         new Vue({ // eslint-disable-line no-new
           el: el,
           render: h => h(content)
