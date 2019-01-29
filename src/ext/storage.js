@@ -1,5 +1,5 @@
 
-const VERSION = '12'
+const VERSION = '14'
 export default {
   DATA_KEY: 'app-data-v' + VERSION,
   CONTENT_KEY: 'app-content' + VERSION,

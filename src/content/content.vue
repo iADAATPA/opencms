@@ -48,8 +48,6 @@
         </el-form>    
       </el-card> 
     </div>
-    
- 
   </div>
 </template>
 <script>
@@ -136,21 +134,49 @@
             this.data.engines = this.storedData.engines
   
             storage.get(storage.CONTENT_KEY).then(value => {
-              const contentStoredData = JSON.parse(value)
-              this.data.icon = contentStoredData.icon
-              this.data.visible = contentStoredData.visible
-              if (this.data.visible === true) {
-                $('body').css('padding-right', '500px')
+              if (value) {
+                const contentStoredData = JSON.parse(value)
+                this.data.icon = contentStoredData.icon
+                this.data.visible = contentStoredData.visible
+                if (this.data.visible === true) {
+                  $('body').css('padding-right', '500px')
+                }
+                const storedEngine = contentStoredData.engine
+                console.log(storedEngine)
+                if (storedEngine.length === 3) {
+                  if (this.engineCascaderHas(this.storedData.engines, storedEngine[0], storedEngine[1], storedEngine[2])) {
+                    this.data.engine = contentStoredData.engine
+                  }
+                }
               }
-              this.data.engine = contentStoredData.engine
             })
           }
         })
       },
+
+      engineCascaderHas (engineCascader, domain, srcLang, tgtLang) {
+        for (const item of engineCascader) {
+          console.log(item.value)
+          if (item.value === domain) {
+            console.log('valid domain')
+            for (const item2 of item.children) {
+              if (item2.value === srcLang) {
+                console.log('valid srclang')
+                for (const item3 of item2.children) {
+                  if (item3.value === tgtLang) {
+                    console.log('valid tgtlang')
+                    return true
+                  }
+                }
+              }
+            }
+          }
+        }
+        return false
+      },
       translate (input) {
         // Set currentInput
         this.currentInput = input
-        console.log('current input', this.currentInput)
         const toTranslate = input.getToTranslate()
         console.log('Translator: translate', toTranslate)
 
@@ -160,7 +186,7 @@
           const srcLang = engineSelected[1]
           const tgtLang = engineSelected[2]
 
-          // Update post editor
+          // Update post editor source
           this.data.source = toTranslate
 
           // Url
@@ -194,7 +220,6 @@
               response.json().then(json => {
                 if (json.success) {
                   json.data.segments.forEach((segment) => {
-                    console.log('translation ok')
                     const translation = segment.translation
                     input.setValue(translation)
                     this.data.target = translation
@@ -209,7 +234,6 @@
               })
             } else {
               input.removeLoading()
-              console.log('response not ok')
             }
           }).catch(err => {
             input.removeLoading()
@@ -218,18 +242,21 @@
           })
         }
       },
+  
+      // Valid translation
       valid () {
-        console.log('valid', this.currentInput)
         this.currentInput.setValue(this.data.target)
       },
+  
+      // Reject translation
       reject () {
         this.currentInput.setValue(this.data.source)
       },
 
+      // Save data
       saveData () {
         const dataJson = JSON.stringify(this.data)
         storage.set(storage.CONTENT_KEY, dataJson).then(() => {
-          console.log('savedData')
         })
       }
     }
@@ -311,7 +338,6 @@
   padding: 0 20px 5px 20px
 }
 
-
 .text-input-wrapper {
 	position: relative;
 	padding: 0px;
@@ -337,9 +363,8 @@ textarea:focus, input:focus{
   padding-bottom:1px;
   padding-left: 7px;
   padding-right: 7px;
-
-
 }
+
 #ia-button-container {
   position: relative;
 }

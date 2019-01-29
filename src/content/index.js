@@ -27,7 +27,6 @@ storage.get(storage.DATA_KEY).then(value => {
 
     if (isAllowedSite) {
       const allowedFrame = siteUrl.includes('editor_form.jsp')
-
       if (allowedFrame) {
         const el = document.createElement('div')
         document.body.prepend(el)

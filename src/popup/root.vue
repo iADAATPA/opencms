@@ -33,7 +33,7 @@
                 <el-input v-model="data.apiKey" placeholder="Enter your API key" type="password"></el-input>
               </el-form-item>
               <el-form-item>
-                <el-checkbox v-model="rememberme">Remember me</el-checkbox>
+                <el-checkbox v-model="data.rememberme">Remember me</el-checkbox>
               </el-form-item>
               <!--  Sign in -->
               <el-button ref="authenticateButton" type="primary" @click="authenticate" :loading="data.authenticateLoading">Log in</el-button>
@@ -41,7 +41,7 @@
         </el-tab-pane>
 
         <!-- Translate -->
-        <el-tab-pane label="Translate" name="translate" >
+        <el-tab-pane label="Translate" name="translate" :disabled="!data.loggedIn">
           <el-form>  
             <el-form-item label="List of allowed URLs. One per line" >
               <el-input type="textarea" :rows="5" placeholder="One url per line" v-model="data.urls">
@@ -72,22 +72,20 @@
   import User from './user'
 
   function getDefault () {
-    // PvWK3Im7srIYaudGh
-
     let data = {
       // Tabs
       activeTab: 'login',
       // Login in
       accessPoint: 'https://mt-hub.eu/api',
-      apiKey: 'PvWK3Im7srIYaudGh',
+      apiKey: '',
       // Auth
       authenticateLoading: false,
       loggedIn: false,
-      lastLogin: null,
-      loginExpire: 60 * 60 * 1000, // One hour
-      rememberme: false,
+      lastLogin: 0,
+      loginExpire: 24 * 60 * 60 * 1000, // 24 hours
+      rememberme: true,
       // Urls
-      urls: 'https://www.mediapart.fr/\nhttps://www.le.ac.uk\nhttp://212.4.98.129:23456/opencms/'
+      urls: ''
     }
     return data
   }
@@ -108,35 +106,34 @@
       authenticate () {
         // Loading animation for the log in button
         this.data.authenticateLoading = true
-
-        // That is this
-        const that = this
   
-        // Login
+        // Get credentials
         const accessPoint = this.data.accessPoint
         const apiKey = this.data.apiKey
+
+        // Auth
         const user = new User(apiKey, accessPoint)
-        user.auth().then(u => {
+        user.auth().then(() => {
           // Close loading animation
           this.data.authenticateLoading = false
   
           if (user.isAuthenticated()) {
             // set engines
-            that.data.engines = user.getEngineCascader()
-            that.data.lastLogin = Date.now()
+            this.data.engines = user.getEngineCascader()
+            this.data.lastLogin = Date.now()
             this.data.activeTab = 'translate'
   
             const dataJson = JSON.stringify(this.data)
-            storage.set(storage.DATA_KEY, dataJson).then(function () {
+            storage.set(storage.DATA_KEY, dataJson).then(() => {
               // Tab
-              that.$message.success('You have successfully logged in')
-            }).catch(function (err) {
+              this.$message.success('You have successfully logged in')
+            }).catch(err => {
               console.log(err)
-              that.data.activeTab = 'login'
-              that.$message.error('Oops, error saving your data')
+              this.data.activeTab = 'login'
+              this.$message.error('Oops, error saving your data')
             })
           } else {
-            that.$message.error('Oops, authentication error. please, retry..')
+            this.$message.error('Oops, authentication error. Please, retry...')
           }
         })
       },
@@ -151,32 +148,30 @@
               this.data = storedData
             } else {
               this.data = getDefault()
-              if (this.rememberme) {
+              if (storedData.rememberme) {
                 this.data.accessPoint = storedData.accessPoint
                 this.data.apiKey = storedData.apiKey
                 this.data.urls = storedData.urls
               }
-              this.rememberme = storedData.rememberme
+              this.data.rememberme = storedData.rememberme
             }
           } else {
             this.data = getDefault()
           }
+          // logged in
+          this.checkLoggedIn()
+          setInterval(() => {
+            this.checkLoggedIn()
+          }, 1000)
         }).catch(function (err) {
           console.log(err)
           this.data = getDefault()
         })
-
-        // loagged in
-        this.checkLoggedIn()
-        setInterval(() => {
-          this.checkLoggedIn()
-        }, 1000)
       },
 
       checkLoggedIn () {
         const loggedIn = (Date.now() - this.data.lastLogin < this.data.loginExpire)
         this.data.loggedIn = loggedIn
-        console.log(loggedIn)
         if (!loggedIn) {
           this.data.activeTab = 'login'
         }
@@ -191,10 +186,23 @@
   
       logout () {
         storage.remove(storage.DATA_KEY).then(() => {
-          const data = getDefault()
-          this.data = data
-        }).catch(function (err) {
-          console.log(err)
+          if (this.data.rememberme) {
+            const data = getDefault()
+            data.accessPoint = this.data.accessPoint
+            data.apiKey = this.data.apiKey
+            data.urls = this.data.urls
+            data.rememberme = this.data.rememberme
+            const dataJson = JSON.stringify(data)
+            storage.set(storage.DATA_KEY, dataJson).then(() => {
+              window.close()
+            })
+          } else {
+            const data = getDefault()
+            const dataJson = JSON.stringify(data)
+            storage.set(storage.DATA_KEY, dataJson).then(() => {
+              window.close()
+            })
+          }
         })
       },
 

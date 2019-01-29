@@ -15,10 +15,10 @@ module.exports = {
   permissions: [
     '<all_urls>',
     '*://*/*',
-    'activeTab',
-    'tabs',
-    'background',
-    'unlimitedStorage',
+    // 'activeTab',
+    // 'tabs',
+    // 'background',
+    // 'unlimitedStorage',
     'storage'
   ],
   browser_action: {
@@ -37,7 +37,7 @@ module.exports = {
       'js/content.js'
     ],
     run_at: 'document_end',
-    matches: ['<all_urls>'],
+    matches: ['*://*/opencms*'], // matches: ['<all_urls>'],
     all_frames: true
   }],
   manifest_version: 2,
