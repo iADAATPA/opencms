@@ -1,6 +1,6 @@
 # Open Cms Translator
 
-A chrome extension that help OpenCms editors to translate their content
+A chrome extension that helps OpenCms editors to translate their contents
 
 ## User guide
 1. Download the open-cms-translator.zip and extract it somewhere
